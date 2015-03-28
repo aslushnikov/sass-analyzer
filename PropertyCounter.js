@@ -1,3 +1,63 @@
+// A set of SASS Script functions.
+var funs = new Set([
+    // Math functions.
+    "abs",
+    "append",
+    "ceil",
+    "floor",
+    "index",
+    "join",
+    "keywords",
+    "length",
+    "list-separator",
+    "map-get",
+    "map-has-key",
+    "map-keys",
+    "map-merge",
+    "map-remove",
+    "map-values",
+    "max",
+    "min",
+    "nth",
+    "percentage",
+    "quote",
+    "random",
+    "round",
+    "set-nth",
+    "str-index",
+    "str-insert",
+    "str-length",
+    "str-slice",
+    "to-lower-case",
+    "to-upper-case",
+    "unquote",
+    "zip",
+    // Color functions.
+    "darken",
+    "lighten",
+    "alpha",
+    "transparentize",
+    "hue",
+    "scale-color",
+    "lightness",
+    "mix",
+    "adjust-hue",
+    "hsla",
+    "hsl",
+    "grayscale",
+    "desaturate",
+    "red",
+    "blue",
+    "green",
+    "invert",
+    "saturation",
+    "adjust-color",
+    "saturate",
+    "ie-hex-str",
+    "opacify",
+    "change-color",
+    "complement",
+]);
 var PropertyCounter = function()
 {
     this.simpleProperties = 0;
@@ -32,10 +92,15 @@ PropertyCounter.prototype = {
             this._state = S.Init;
             return;
         }
-        // Update state.
+        // If we find a property name, then start a new property.
         if (type === "property") {
             this._state = S.PropertyName;
             ++this.properties;
+            return;
+        }
+        // If we find some SASS Script function, then this is a complex property.
+        if ((this._state === S.PropertyName || this._state === S.SimpleValue) && funs.has(token)) {
+            this._state = S.ComplexValue;
             return;
         }
         if (this._state === S.PropertyName) {
