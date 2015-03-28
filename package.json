@@ -1,0 +1,17 @@
+{
+  "name": "scss-analyze",
+  "version": "0.0.0",
+  "description": "",
+  "main": "PropertyCounter.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "progress": "^1.1.8"
+  }
+}
