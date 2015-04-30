@@ -5,7 +5,7 @@ var fs = require("fs")
 
 var directory = process.argv[2];
 if (!directory) {
-    console.error("Usage: node propStats.js <directory with .scss files>");
+    console.error("Usage: node analyze.js <directory with .scss files>");
     return;
 }
 
