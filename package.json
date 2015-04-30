@@ -13,5 +13,8 @@
   "license": "ISC",
   "dependencies": {
     "progress": "^1.1.8"
+  },
+  "devDependencies": {
+    "mocha": "^2.2.4"
   }
 }
