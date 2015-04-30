@@ -1,7 +1,7 @@
-var createTokenizer = require("./lib/devtoolsTokenizer")
-  , PropertyCounter = require("./PropertyCounter")
-  , fs = require("fs")
-  , ProgressBar = require('progress')
+var fs = require("fs")
+  , ProgressBar = require("progress")
+  , fileStats = require("./FileStats")
+  , path = require("path")
 
 var directory = process.argv[2];
 if (!directory) {
@@ -22,18 +22,17 @@ fs.readdir(directory, function(err, files) {
       , totalSASSScriptProperties = 0
 
     // Fancy UI.
-    var bar = new ProgressBar(':bar', { total: files.length });
+    var bar = new ProgressBar(":bar", { total: files.length });
 
     var index = 0;
-    var perFileStats;
-    function peekFile()
+    function peekFile(err, stats)
     {
         bar.tick();
-        if (perFileStats) {
-            totalProperties += perFileStats.properties;
-            totalCSSProperties += perFileStats.cssProperties;
-            totalSASSVarProperties += perFileStats.sassVarProperties;
-            totalSASSScriptProperties += perFileStats.sassScriptProperties;
+        if (stats) {
+            totalProperties += stats.properties;
+            totalCSSProperties += stats.cssProperties;
+            totalSASSVarProperties += stats.sassVarProps;
+            totalSASSScriptProperties += stats.sassScriptProps;
         }
         if (index === files.length) {
             console.log("PROPERTY VALUE STATS\nCSS: %d\nSASSVar: %d\nSASSScript: %d\n---------\nTotal: %d",
@@ -43,23 +42,10 @@ fs.readdir(directory, function(err, files) {
                 totalProperties);
             return;
         }
-        perFileStats = new PropertyCounter();
-        statsForFile(directory + "/" + files[index++], perFileStats, peekFile);
+        var fileName = files[index++];
+        var filePath = path.join(directory, fileName);
+        fileStats(filePath, peekFile);
     }
     peekFile();
 });
 
-function statsForFile(fileName, counter, callback)
-{
-    fs.readFile(fileName, "utf-8", function(err, text) {
-        if (err || !text) {
-            console.error("Cannot read " + fileName);
-            callback();
-            return;
-        }
-
-        var tokenize = createTokenizer("text/x-scss");
-        tokenize(text, counter.feed.bind(counter));
-        callback();
-    });
-}
