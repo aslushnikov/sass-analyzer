@@ -42,8 +42,8 @@ var funs = new Set([
     "lightness",
     "mix",
     "adjust-hue",
-    "hsla",
-    "hsl",
+    //"hsla",
+    //"hsl",
     "grayscale",
     "desaturate",
     "red",
@@ -60,8 +60,9 @@ var funs = new Set([
 ]);
 var PropertyCounter = function()
 {
-    this.simpleProperties = 0;
-    this.complexProperties = 0;
+    this.cssProperties = 0;
+    this.sassVarProperties = 0;
+    this.sassScriptProperties = 0;
     this.properties = 0;
     this._state = PropertyCounter.State.Init;
 }
@@ -69,13 +70,15 @@ var PropertyCounter = function()
 PropertyCounter.State = {
     Init: "Init",
     PropertyName: "PropertyName",
-    SimpleValue: "SimpleValue",
-    ComplexValue: "ComplexValue"
+    CSSValue: "CSSValue",
+    SASSVarValue: "SASSVarValue",
+    SASSScriptValue: "SASSScriptValue"
 }
 
 PropertyCounter.prototype = {
     feed: function(token, type)
     {
+        //console.log("%s => %s", token, type);
         // Skip whitespace tokens.
         if (!token.trim().length)
             return;
@@ -85,10 +88,12 @@ PropertyCounter.prototype = {
         var S = PropertyCounter.State;
         // Restore state to initial after every ";" and "}".
         if (type === null && (token === ";" || token === "}" || token === "\n")) {
-            if (this._state === S.SimpleValue)
-                ++this.simpleProperties;
-            else if (this._state === S.ComplexValue)
-                ++this.complexProperties;
+            if (this._state === S.CSSValue)
+                ++this.cssProperties;
+            else if (this._state === S.SASSVarValue)
+                ++this.sassVarProperties;
+            else if (this._state === S.SASSScriptValue)
+                ++this.sassScriptProperties;
             this._state = S.Init;
             return;
         }
@@ -98,17 +103,27 @@ PropertyCounter.prototype = {
             ++this.properties;
             return;
         }
-        // If we find some SASS Script function, then this is a complex property.
-        if ((this._state === S.PropertyName || this._state === S.SimpleValue) && funs.has(token)) {
-            this._state = S.ComplexValue;
+        // If we find some SASS Script function, then this is a sass script value.
+        if (funs.has(token)) {
+            if (this._state !== S.Init)
+                this._state = S.SASSScriptValue;
             return;
         }
+        // If we find some variable reference...
+        if (type && token && type.indexOf("variable") === 0 && token.indexOf("$") === 0) {
+            if (this._state === S.PropertyName || this._state === S.CSSValue)
+                this._state = S.SASSVarValue;
+            else if (this._state !== S.Init)
+                this._state = S.SASSScriptValue;
+            return;
+        }
+
         if (this._state === S.PropertyName) {
             if (token !== ":")
-                this._state = S.SimpleValue;
-        } else if (this._state === S.SimpleValue) {
+                this._state = S.CSSValue;
+        } else if (this._state === S.CSSValue) {
             if (!type && "+-*/%".indexOf(token) !== -1)
-                this._state = S.ComplexValue;
+                this._state = S.SASSScriptValue;
         }
     }
 }

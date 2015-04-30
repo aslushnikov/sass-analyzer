@@ -16,9 +16,10 @@ fs.readdir(directory, function(err, files) {
     }
 
     // Total amount of complex properties and properties across all files.
-    var totalComplex = 0
+    var totalCSSProperties = 0
       , totalProperties = 0
-      , filesWithComplexProperties = 0
+      , totalSASSVarProperties = 0
+      , totalSASSScriptProperties = 0
 
     // Fancy UI.
     var bar = new ProgressBar(':bar', { total: files.length });
@@ -30,15 +31,15 @@ fs.readdir(directory, function(err, files) {
         bar.tick();
         if (perFileStats) {
             totalProperties += perFileStats.properties;
-            totalComplex += perFileStats.complexProperties;
-            if (perFileStats.complexProperties > 0)
-                ++filesWithComplexProperties;
+            totalCSSProperties += perFileStats.cssProperties;
+            totalSASSVarProperties += perFileStats.sassVarProperties;
+            totalSASSScriptProperties += perFileStats.sassScriptProperties;
         }
         if (index === files.length) {
-            console.log("Files with complex properties: %d/%d\n Complex properties: %d/%d",
-                filesWithComplexProperties,
-                files.length,
-                totalComplex,
+            console.log("PROPERTY VALUE STATS\nCSS: %d\nSASSVar: %d\nSASSScript: %d\n---------\nTotal: %d",
+                totalCSSProperties,
+                totalSASSVarProperties,
+                totalSASSScriptProperties,
                 totalProperties);
             return;
         }
