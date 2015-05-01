@@ -2,13 +2,10 @@ var fs = require("fs")
   , ProgressBar = require("progress")
   , fileStats = require("./FileStats")
   , path = require("path")
-  , CreateBlockingQueue = require("block-queue")
   , program = require("commander")
 
 program
     .version("0.1.0")
-    .usage("[options] <dir>")
-    .option("-p, --parallel <n>", "Parallel factor", parseInt)
     .parse(process.argv);
 
 var directory = program.args[0]
@@ -29,28 +26,29 @@ fs.readdir(directory, function(err, files) {
       , totalSASSVarProperties = 0
       , totalSASSScriptProperties = 0
 
-    var TERMINATION = {};
-
     // Fancy UI.
     var bar = new ProgressBar(":bar", { total: files.length });
-    var parallel = program.parallel || 1;
-    console.log("Analyzing " + files.length + " files in " + parallel + " threads...");
-    var queue = CreateBlockingQueue(parallel, function(fileName, done) {
-        if (fileName === TERMINATION)
-            outputStats();
-        else
-            fileStats(fileName, onStats.bind(null, done));
-    });
+    console.log("Analyzing " + files.length + " files...");
 
-    function onStats(done, err, stats) {
+    loop(0);
+    function loop(index) {
+        if (index < files.length)
+            fileStats(path.join(directory, files[index]), onStats.bind(null, index));
+        else
+            outputStats();
+    }
+
+    function onStats(index, err, stats) {
         bar.tick();
+        if (err)
+            console.log(err);
         if (stats) {
             totalProperties += stats.properties;
             totalCSSProperties += stats.cssProperties;
             totalSASSVarProperties += stats.sassVarProps;
             totalSASSScriptProperties += stats.sassScriptProps;
         }
-        done();
+        loop(index + 1);
     }
 
     function outputStats() {
@@ -60,9 +58,5 @@ fs.readdir(directory, function(err, files) {
             totalSASSScriptProperties,
             totalProperties);
     }
-
-    for (var i = 0; i < files.length; ++i)
-        queue.push(path.join(directory, files[i]));
-    queue.push(TERMINATION);
 });
 
