@@ -2,8 +2,16 @@ var fs = require("fs")
   , ProgressBar = require("progress")
   , fileStats = require("./FileStats")
   , path = require("path")
+  , CreateBlockingQueue = require("block-queue")
+  , program = require("commander")
 
-var directory = process.argv[2];
+program
+    .version("0.1.0")
+    .usage("[options] <dir>")
+    .option("-p, --parallel <n>", "Parallel factor", parseInt)
+    .parse(process.argv);
+
+var directory = program.args[0]
 if (!directory) {
     console.error("Usage: node analyze.js <directory with .scss files>");
     return;
@@ -21,12 +29,20 @@ fs.readdir(directory, function(err, files) {
       , totalSASSVarProperties = 0
       , totalSASSScriptProperties = 0
 
+    var TERMINATION = {};
+
     // Fancy UI.
     var bar = new ProgressBar(":bar", { total: files.length });
+    var parallel = program.parallel || 1;
+    console.log("Analyzing " + files.length + " files in " + parallel + " threads...");
+    var queue = CreateBlockingQueue(parallel, function(fileName, done) {
+        if (fileName === TERMINATION)
+            outputStats();
+        else
+            fileStats(fileName, onStats.bind(null, done));
+    });
 
-    var index = 0;
-    function peekFile(err, stats)
-    {
+    function onStats(done, err, stats) {
         bar.tick();
         if (stats) {
             totalProperties += stats.properties;
@@ -34,18 +50,19 @@ fs.readdir(directory, function(err, files) {
             totalSASSVarProperties += stats.sassVarProps;
             totalSASSScriptProperties += stats.sassScriptProps;
         }
-        if (index === files.length) {
-            console.log("PROPERTY VALUE STATS\nCSS: %d\nSASSVar: %d\nSASSScript: %d\n---------\nTotal: %d",
-                totalCSSProperties,
-                totalSASSVarProperties,
-                totalSASSScriptProperties,
-                totalProperties);
-            return;
-        }
-        var fileName = files[index++];
-        var filePath = path.join(directory, fileName);
-        fileStats(filePath, peekFile);
+        done();
     }
-    peekFile();
+
+    function outputStats() {
+        console.log("PROPERTY VALUE STATS\nCSS: %d\nSASSVar: %d\nSASSScript: %d\n---------\nTotal: %d",
+            totalCSSProperties,
+            totalSASSVarProperties,
+            totalSASSScriptProperties,
+            totalProperties);
+    }
+
+    for (var i = 0; i < files.length; ++i)
+        queue.push(path.join(directory, files[i]));
+    queue.push(TERMINATION);
 });
 
