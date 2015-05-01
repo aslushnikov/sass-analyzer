@@ -28,4 +28,5 @@ describe("FileStats", function(){
     it("test #4", testBind("4.scss", 0, 4, 0, 4));
     it("test #5", testBind("5.scss", 6, 0, 0, 6));
     it("test #6", testBind("6.scss", 3, 0, 2, 5));
+    it("test #7", testBind("7.scss", 1, 1, 1, 3));
 })

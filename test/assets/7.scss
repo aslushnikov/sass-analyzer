@@ -1,0 +1,8 @@
+$border-style: solid;
+$border-color: red;
+
+body {
+  border: 1px $border-style $border-color;
+  color: $border-color;
+  font-family: arial;
+}
