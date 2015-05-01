@@ -1,8 +1,20 @@
-# Analyze set of SCSS files.
+# Gather statistics for SCSS files.
 
-## How-to
+The script gathers the following statistics about SCSS files:
+- Total amount of properties defined
+- Amount of properties with a plain CSS value
+- Amount of properties with a plain CSS value and a single SCSS var usage (without any SASS script)
+- Amount of properties with SASS script
 
-1. Install dependencies via `npm install`
-2. Put your set of scss files in `./scss` folder
-3. Run `./search.sh lighten` to grep files for lighten color function. Run `./search.sh lighten darken` to grep for matches of lighten OR darken functions.
-4. Run `node analyze.js scss/` to get stats regarding properties using SASS Script (refered as "complex" properties)
+## Installing
+
+1. `git clone https://github.com/aslushnikov/sass-analyzer`
+2. `cd sass-analyzer && npm install`
+
+## Gathering stats
+
+1. `node analyze.js directory-with-scss-to-analyze/`
+
+## Running tests
+
+1. `mocha test`
