@@ -1,11 +1,12 @@
 var fs = require("fs")
+  , dir = require("node-dir")
   , ProgressBar = require("progress")
   , fileStats = require("./FileStats")
   , path = require("path")
   , program = require("commander")
 
 program
-    .version("0.1.0")
+    .version("0.2.0")
     .parse(process.argv);
 
 var directory = program.args[0]
@@ -14,11 +15,18 @@ if (!directory) {
     return;
 }
 
-fs.readdir(directory, function(err, files) {
+dir.files(directory, processFiles);
+
+function processFiles(err, files) {
     if (err || !files) {
         console.error("Failed to read directory: " + directory);
         return;
     }
+
+    // exclude files whose name starts with a '.'
+    files = files.filter(function (file) {
+        return path.basename(file).substr(0, 1) !== '.';
+    });
 
     // Total amount of complex properties and properties across all files.
     var totalCSSProperties = 0
@@ -33,7 +41,7 @@ fs.readdir(directory, function(err, files) {
     loop(0);
     function loop(index) {
         if (index < files.length)
-            fileStats(path.join(directory, files[index]), onStats.bind(null, index));
+            fileStats(files[index], onStats.bind(null, index));
         else
             outputStats();
     }
@@ -58,5 +66,5 @@ fs.readdir(directory, function(err, files) {
             totalSASSScriptProperties,
             totalProperties);
     }
-});
+}
 

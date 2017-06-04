@@ -1,6 +1,6 @@
 {
   "name": "scss-analyze",
-  "version": "0.0.0",
+  "version": "0.2.0",
   "description": "",
   "main": "PropertyCounter.js",
   "directories": {
@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "commander": "^2.8.1",
+    "node-dir": "^0.1.17",
     "progress": "^1.1.8"
   },
   "devDependencies": {
